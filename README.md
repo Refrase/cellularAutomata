@@ -1,4 +1,4 @@
-# cellularAutomata
+# Cellular Automata
 
 Script that evolves a grid of cells depending on the surrounding cells.  
 Random new paints or looping the same random paint can be set as well as cell size.  
