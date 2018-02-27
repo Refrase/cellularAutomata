@@ -4,6 +4,13 @@ class Table extends Component {
   constructor() {
     super()
 
+    // Settings
+    this.cellWidth = 64
+    this.cellHeight = 64
+    this.colors = [ 'white', 'black' ]
+    this.randomizeNewPaints = false
+    // --------
+
     this.renderCell = this.renderCell.bind(this)
     this.renderRow = this.renderRow.bind(this)
     this.repaint = this.repaint.bind(this)
@@ -13,15 +20,9 @@ class Table extends Component {
 
     this.paintInterval = null
     this.firstPaint = null
-    this.cellWidth = 64
-    this.cellHeight = 64
-    this.rowsAmount = null // Set in componentDidMount
-    this.cellsPerRow = null // Set in componentDidMount
-    this.colors = [ 'white', 'black' ]
+    this.cellsPerRow = Math.floor(window.innerWidth / this.cellWidth)  // Compute number of cells per row based on viewport width
+    this.rowsAmount = Math.floor(window.innerHeight / this.cellHeight) // Compute number of rows based on viewport height
     this.allCells = document.getElementsByTagName( 'td' )
-
-    // Settings
-    this.randomizeNewPaints = false
 
     this.state = {
       paintNum: 0,
@@ -31,10 +32,6 @@ class Table extends Component {
   }
 
   componentDidMount() {
-    // Compute number of rows and cells per row based on viewport width and height
-    this.rowsAmount = Math.floor(window.innerHeight / this.cellHeight)
-    this.cellsPerRow = Math.floor(window.innerWidth / this.cellWidth)
-
     this.renderRows(this.rowsAmount)
     this.paintInterval = setInterval( this.repaint, 100 )
   }
