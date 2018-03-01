@@ -5,24 +5,26 @@ class Table extends Component {
     super()
 
     // Settings
-    this.cellWidth = 64
-    this.cellHeight = 64
+    this.cellWidth = 48
+    this.cellHeight = 48
+    this.framesPerSecond = 8
     this.colors = [ 'white', 'black' ]
     this.randomizeNewPaints = false
     // --------
 
     this.renderCell = this.renderCell.bind(this)
     this.renderRow = this.renderRow.bind(this)
-    this.repaint = this.repaint.bind(this)
+    this.paint = this.paint.bind(this)
     this.decideColorFromNeighbourhood = this.decideColorFromNeighbourhood.bind(this)
     this.allCellsSameColor = this.allCellsSameColor.bind(this)
     this.getFirstPaintColorMap = this.getFirstPaintColorMap.bind(this)
 
-    this.paintInterval = null
     this.firstPaint = null
     this.cellsPerRow = Math.floor(window.innerWidth / this.cellWidth)  // Compute number of cells per row based on viewport width
     this.rowsAmount = Math.floor(window.innerHeight / this.cellHeight) // Compute number of rows based on viewport height
     this.allCells = document.getElementsByTagName( 'td' )
+    this.then = null
+    this.fpsInterval = 1000 / this.framesPerSecond
 
     this.state = {
       paintNum: 0,
@@ -33,10 +35,9 @@ class Table extends Component {
 
   componentDidMount() {
     this.renderRows(this.rowsAmount)
-    this.paintInterval = setInterval( this.repaint, 100 )
+    this.then = Date.now()
+    setTimeout( this.paint, 0 ) // Ensuring that paint is pushed to next call stack tick so that DOM elements are available
   }
-
-  componentWillUnmount() { clearInterval(this.paintInterval) }
 
   getFirstPaintColorMap() {
     let cellBackgrounds = []
@@ -44,13 +45,28 @@ class Table extends Component {
     return cellBackgrounds
   }
 
-  repaint() {
-    if ( this.state.paintNum == 0 ) this.firstPaint = this.getFirstPaintColorMap() // Save first paint for reuse if not randomizeNewPaints is on
-    this.setState({
-      paintNum: this.state.paintNum + 1,
-      allCellsSameColor: this.allCellsSameColor()
-    })
-    this.renderRows(this.rowsAmount)
+  paint() {
+
+    requestAnimationFrame(this.paint) // Request another frame
+
+    // ##### Time controlling first part of function (the animation speed is set at this.framesPerSecond)
+    // Calc elapsed time since last loop
+    const now = Date.now();
+    const elapsed = now - this.then;
+    if (elapsed > this.fpsInterval) { // If enough time has elapsed, draw the next frame
+      // Get ready for next frame by setting then = now, but also adjust for the specified fpsInterval not being a multiple of requestAnimationFrame's interval (16.7ms)
+      this.then = now - ( elapsed % this.fpsInterval )
+
+      // ##### The actual painting
+      if ( this.state.paintNum == 0 ) this.firstPaint = this.getFirstPaintColorMap() // Save first paint for reuse if not randomizeNewPaints is on
+      this.setState({
+        paintNum: this.state.paintNum + 1,
+        allCellsSameColor: this.allCellsSameColor() // Check if all cells are same color. If they are loop animation from the "color map" saved in this.firstPaint
+      })
+      this.renderRows(this.rowsAmount)
+
+    }
+
   }
 
   allCellsSameColor() { // Detect when all cells are same color for triggering a repaint of cells
@@ -87,7 +103,7 @@ class Table extends Component {
 
     // This is the rules that directs the color of the cell based on neighbourhood cells
     if (
-      backgroundColors[1] == color && backgroundColors[2] == color ||
+      backgroundColors[1] == color && backgroundColors[7] == color ||
       backgroundColors[3] == color && backgroundColors[7] == color ||
       backgroundColors[4] == color && backgroundColors[5] == color && backgroundColors[6] == color
     ) {
