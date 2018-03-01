@@ -8,7 +8,7 @@ class Table extends Component {
     this.cellWidth = 48
     this.cellHeight = 48
     this.framesPerSecond = 8
-    this.colors = [ 'white', 'black' ]
+    this.colors = [ 'silver', 'white' ]
     this.randomizeNewPaints = false
     // --------
 
